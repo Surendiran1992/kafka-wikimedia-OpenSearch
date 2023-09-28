@@ -26,9 +26,9 @@ public class WikimediaChangesProducer {
         // props.setProperty(ProducerConfig.RETRIES_CONFIG, Integer.toString(Integer.MAX_VALUE));
 
         //adding compression and increasig batchSize to 32KB for better efficiency
-        props.setProperty(ProducerConfig.LINGER_MS_CONFIG, "20");
-        props.setProperty(ProducerConfig.COMPRESSION_TYPE_CONFIG, "snappy");
-        props.setProperty(ProducerConfig.BATCH_SIZE_CONFIG, Integer.toString(32 * 1024));
+        // props.setProperty(ProducerConfig.LINGER_MS_CONFIG, "20");
+        // props.setProperty(ProducerConfig.COMPRESSION_TYPE_CONFIG, "snappy");
+        // props.setProperty(ProducerConfig.BATCH_SIZE_CONFIG, Integer.toString(32 * 1024));
     
     
         KafkaProducer<String,String> producer = new KafkaProducer<>(props);
@@ -39,8 +39,8 @@ public class WikimediaChangesProducer {
 
         // start the producer in another thread, produce for 10 secs and close the connection
         build.start();
-
-        TimeUnit.SECONDS.sleep(3);
+    
+        TimeUnit.SECONDS.sleep(10);
 
     }
 }

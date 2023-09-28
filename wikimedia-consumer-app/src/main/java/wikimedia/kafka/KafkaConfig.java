@@ -14,13 +14,14 @@ public class KafkaConfig {
     public static final String CONDUCTOR_BOOTSTRAP_SERVER = "selected-flea-7056-us1-kafka.upstash.io:9092";
     public static final String LOCALHOST_BOOTSTRAP_SERVER = "localhost:9092";
 
-    public static Properties getLocalServerConsumerProperties(String groupId,String autoOffset,String keyDeSerializer, String valueDeSerializer) {
+    public static Properties getLocalServerConsumerProperties(String groupId,String autoOffset,String keyDeSerializer, String valueDeSerializer,boolean autocommit) {
         Properties props = new Properties();
         props.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         props.setProperty(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, keyDeSerializer);
         props.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, valueDeSerializer);
         props.setProperty(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         props.setProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG,autoOffset);
+        props.setProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, Boolean.toString(autocommit));
         return props;
     }
 
