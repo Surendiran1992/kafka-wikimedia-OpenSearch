@@ -22,6 +22,9 @@ public class KafkaConfig {
         props.setProperty(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         props.setProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG,autoOffset);
         props.setProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, Boolean.toString(autocommit));
+        //it waits maximum of 5s before fetching the data and it overiddes MAX and MIN FETCH SIZE, if minimum fetch size is not attained in 5s this will return accumulated data
+        props.setProperty(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG, "5000"); 
+        props.setProperty(ConsumerConfig.FETCH_MIN_BYTES_CONFIG,"50000"); //waits for 5KB of data to be accumulated before it fetches it
         return props;
     }
 

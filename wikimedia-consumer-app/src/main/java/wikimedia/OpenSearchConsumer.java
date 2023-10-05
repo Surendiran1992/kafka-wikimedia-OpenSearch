@@ -14,6 +14,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.errors.WakeupException;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.opensearch.OpenSearchStatusException;
 import org.opensearch.action.bulk.BulkRequest;
@@ -45,11 +46,12 @@ public class OpenSearchConsumer {
         // StringDeserializer.class.getName(), StringDeserializer.class.getName(),
         // true));
 
-        // consumer with auto commit disabled, will commit offset manually after
-        // processing
+        // consumer with auto commit disabled, will commit offset manually after processing
         KafkaConsumer<String, String> consumer = new KafkaConsumer<>(
                 KafkaConfig.getLocalServerConsumerProperties(GROUP_ID, OFFSET_CONFIG,
                         StringDeserializer.class.getName(), StringDeserializer.class.getName(), false));
+
+        shutdownHook(consumer);
 
         try (openSearchClient; consumer) {
 
@@ -70,6 +72,12 @@ public class OpenSearchConsumer {
                 processBulkRecord(consumer, openSearchClient);
             }
 
+        }catch (WakeupException wake){log.info("Consumer is starting to shutdown");
+        }catch (Exception e){log.error("Unexpected exception");
+        }finally {
+            consumer.close();
+            openSearchClient.close();
+            log.info("The consumer is now gracefully shutdown");
         }
     }
 
@@ -98,7 +106,7 @@ public class OpenSearchConsumer {
                 log.info("Successfully Committed the offset");
             } catch (OpenSearchStatusException e) {
                 isClientExcepThrown = true;
-                // consumer.commitSync(offsetAndPartition,Duration.ofMillis(3000));
+                consumer.commitSync(offsetAndPartition,Duration.ofMillis(3000));
                 log.info(format("Exception thrown while processing record, Sucessfully Committed the offset"));
             }
         } while (isClientExcepThrown);
@@ -131,7 +139,7 @@ public class OpenSearchConsumer {
                 }
             } catch (OpenSearchStatusException e) {
                 isClientExcepThrown = true;
-                // consumer.commitSync();
+                consumer.commitSync();
                 log.info(format("Exception thrown while processing record, Sucessfully Committed the offset"));
             }
         } while (isClientExcepThrown);
@@ -141,5 +149,25 @@ public class OpenSearchConsumer {
     private static String extractIdInRequest(String jsonRcrd) {
         return JsonParser.parseString(jsonRcrd).getAsJsonObject()
                 .get("meta").getAsJsonObject().get("id").getAsString();
+    }
+
+    private static void shutdownHook(KafkaConsumer<String,String> consumer){
+         //reference to main thread
+         Thread mainThread = Thread.currentThread();
+
+         //creating new thread for shutdowm from the runTime
+         Runtime.getRuntime().addShutdownHook(new Thread(){
+             @Override
+             public void run(){
+                 log.info("ShutDown Detected lets shutdown gracefully by calling consumer.wakeup().........");
+                 consumer.wakeup();
+                 //this will allow shutdownHook to allow the execution in main thread
+                 try {
+                     mainThread.join();
+                 } catch (InterruptedException e) {
+                     throw new RuntimeException(e);
+                 }
+             }
+         });
     }
 }
