@@ -10,3 +10,4 @@
 rootProject.name = 'wikimedia-kafka'
 include('wikimedia-producer-app')
 include('wikimedia-consumer-app')
+include('kafka-streams-wikimedia')
